@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # 允许你手动点击按钮触发构建
 
 jobs:
   build:
@@ -13,33 +14,40 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
+      # 1. 设置环境
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 2. 安装依赖 (使用 npm ci 更稳，如果没有 lock 文件会自动回退到 install)
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Next.js Static Site
+      # 3. 编译网页 (这里会调用 vite build)
+      - name: Build Web Assets
         run: npm run build
 
-      - name: Initialize Capacitor
+      # 4. 初始化安卓环境
+      - name: Setup Capacitor
         run: |
           npx cap init "AI News" com.ainews.app --web-dir=out
           npx cap add android
 
-      - name: Build APK with Gradle
+      # 5. 【关键修改】赋予脚本执行权限并打包
+      - name: Build APK
         run: |
           cd android
+          chmod +x gradlew  # <--- 加了这一行，解决权限不足报错
           ./gradlew assembleDebug
 
+      # 6. 上传结果
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
