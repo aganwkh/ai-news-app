@@ -1,0 +1,5 @@
+{
+  "name": "通勤简报",
+  "description": "使用 Gemini 生成个性化的每日通勤新闻音频摘要。",
+  "requestFramePermissions": []
+}
